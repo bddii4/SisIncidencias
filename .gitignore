@@ -1,0 +1,14 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+
+# Django
+manage.py
+*.pyc
+
+# Environment
+.env
