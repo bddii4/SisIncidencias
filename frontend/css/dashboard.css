@@ -1,0 +1,100 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f0f2f5;
+        }
+
+        header {
+            background: #1e3c72;
+            color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+        }
+
+        header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        header .user-info span {
+            font-size: 0.9rem;
+        }
+
+        header .user-info a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.15);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+        }
+
+        header .user-info a:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .welcome {
+            background: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .welcome h2 {
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome p {
+            color: #555;
+        }
+
+        .card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .card h3 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            background: #1e3c72;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #2a5298;
+        }
