@@ -1,37 +1,280 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Sistema de Incidencias</title>
-    <link rel="stylesheet" href="/frontend/css/dashboard.css">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body>
-    <header>
-        <h1>Sistema de Incidencias</h1>
-        <div class="user-info">
-            <span id="username">Usuario</span>
-            <a href="/logout">Cerrar sesión</a>
-        </div>
-    </header>
 
-    <div class="container">
-        <div class="welcome">
-            <h2>Bienvenido</h2>
-            <p>Selecciona una opción para comenzar.</p>
+    <div class="sidebar">
+        <div>
+            <div class="brand">
+                <h2>SisIncidencias</h2>
+            </div>
+            <ul class="menu-items">
+                <li class="active">Todas las incidencias</li>
+                <li>Mis reportes</li>
+            </ul>
         </div>
-
-        <div class="card">
-            <h3>Reportar una incidencia</h3>
-            <p style="color: #555; margin-bottom: 1rem;">Crea un nuevo reporte de incidencia.</p>
-            <a href="#" class="btn">Nueva Incidencia</a>
-        </div>
-
-        <div class="card">
-            <h3>Mis incidencias</h3>
-            <p style="color: #555; margin-bottom: 1rem;">Consulta el estado de tus reportes.</p>
-            <a href="#" class="btn">Ver incidencias</a>
+        <div>
+            <div style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 8px;" id="sidebar-user">admin</div>
+            <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
         </div>
     </div>
+
+    <div class="main-content">
+        <header>
+            <div>
+                <h1>Incidencias</h1>
+                <p>Panel de administracion de tickets</p>
+            </div>
+            <button class="btn-new" onclick="abrirModalNuevo()">+ Nueva incidencia</button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card urgent">
+                <div class="number" id="count-urgentes">0</div>
+                <div class="label">Urgentes</div>
+            </div>
+            <div class="stat-card progress">
+                <div class="number" id="count-proceso">0</div>
+                <div class="label">En proceso</div>
+            </div>
+            <div class="stat-card done">
+                <div class="number" id="count-resueltos">0</div>
+                <div class="label">Resueltos</div>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <input type="text" id="searchInput" placeholder="Buscar por ticket o titulo..." oninput="filtrarIncidencias()">
+            <select id="filterPrioridad" onchange="filtrarIncidencias()">
+                <option value="">Todas las prioridades</option>
+                <option value="urgente">Urgente</option>
+                <option value="normal">Normal</option>
+                <option value="baja">Baja</option>
+            </select>
+            <select id="filterEstado" onchange="filtrarIncidencias()">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="proceso">En proceso</option>
+                <option value="resuelto">Resuelto</option>
+            </select>
+        </div>
+
+        <div class="tickets-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticket</th>
+                        <th>Titulo</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Accion</th>
+                    </tr>
+                </thead>
+                <tbody id="tickets-body">
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+                <h3>No hay incidencias registradas</h3>
+                <p>Crea la primera incidencia para comenzar.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalIncidencia">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-title">Nueva incidencia</h3>
+                <button class="close-modal-btn" onclick="cerrarModal('modalIncidencia')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formIncidencia">
+                    <div class="form-group">
+                        <label for="titulo">Titulo</label>
+                        <input type="text" id="titulo" placeholder="Describe brevemente el problema" required style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;outline:none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripcion</label>
+                        <textarea id="descripcion" placeholder="Explica el problema a detalle..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="prioridad">Prioridad</label>
+                        <select id="prioridad" required>
+                            <option value="">Selecciona una prioridad</option>
+                            <option value="urgente">Urgente</option>
+                            <option value="normal">Normal</option>
+                            <option value="baja">Baja</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="cerrarModal('modalIncidencia')">Cancelar</button>
+                <button class="btn-save" onclick="guardarIncidencia()">Enviar reporte</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalGestionar">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-ticket-title">Gestionar ticket</h3>
+                <button class="close-modal-btn" onclick="cerrarModal('modalGestionar')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <div>
+                        <label>Prioridad</label>
+                        <p id="modal-prioridad">--</p>
+                    </div>
+                    <div>
+                        <label>Estado actual</label>
+                        <p id="modal-estado-actual">--</p>
+                    </div>
+                    <div>
+                        <label>Fecha</label>
+                        <p id="modal-fecha">--</p>
+                    </div>
+                </div>
+                <div class="ticket-desc-box" id="modal-descripcion">Cargando...</div>
+                <div class="form-group">
+                    <label for="nuevo-estado">Cambiar estado</label>
+                    <select id="nuevo-estado">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="proceso">En proceso</option>
+                        <option value="resuelto">Resuelto</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="cerrarModal('modalGestionar')">Cancelar</button>
+                <button class="btn-save" onclick="actualizarEstado()">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let incidencias = [];
+        let ticketSeleccionado = null;
+
+        function cargarIncidencias() {
+            const tbody = document.getElementById('tickets-body');
+            const empty = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (incidencias.length === 0) {
+                empty.style.display = 'block';
+                document.querySelector('.tickets-container table').style.display = 'none';
+                return;
+            }
+
+            empty.style.display = 'none';
+            document.querySelector('.tickets-container table').style.display = '';
+
+            const filtroTexto = document.getElementById('searchInput').value.toLowerCase();
+            const filtroPrioridad = document.getElementById('filterPrioridad').value;
+            const filtroEstado = document.getElementById('filterEstado').value;
+
+            const filtradas = incidencias.filter(i => {
+                const matchTexto = i.titulo.toLowerCase().includes(filtroTexto) || i.ticket.toLowerCase().includes(filtroTexto);
+                const matchPrioridad = !filtroPrioridad || i.prioridad === filtroPrioridad;
+                const matchEstado = !filtroEstado || i.estado === filtroEstado;
+                return matchTexto && matchPrioridad && matchEstado;
+            });
+
+            filtradas.forEach(i => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${i.ticket}</strong></td>
+                    <td>${i.titulo}</td>
+                    <td><span class="badge p-${i.prioridad}">${i.prioridad === 'urgente' ? 'Urgente' : i.prioridad === 'normal' ? 'Normal' : 'Baja'}</span></td>
+                    <td><span class="badge badge-status ${i.estado === 'proceso' ? 'proceso' : i.estado === 'resuelto' ? 'resuelto' : ''}">${i.estado === 'pendiente' ? 'Pendiente' : i.estado === 'proceso' ? 'En proceso' : 'Resuelto'}</span></td>
+                    <td style="font-size:0.85rem;color:#64748b;">${i.fecha}</td>
+                    <td><button class="btn-action" onclick="abrirGestionar('${i.ticket}')">Gestionar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('count-urgentes').textContent = incidencias.filter(i => i.prioridad === 'urgente').length;
+            document.getElementById('count-proceso').textContent = incidencias.filter(i => i.estado === 'proceso').length;
+            document.getElementById('count-resueltos').textContent = incidencias.filter(i => i.estado === 'resuelto').length;
+        }
+
+        function filtrarIncidencias() {
+            cargarIncidencias();
+        }
+
+        function abrirModalNuevo() {
+            document.getElementById('modal-title').textContent = 'Nueva incidencia';
+            document.getElementById('formIncidencia').reset();
+            document.getElementById('modalIncidencia').classList.add('show');
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.remove('show');
+            ticketSeleccionado = null;
+        }
+
+        function guardarIncidencia() {
+            const titulo = document.getElementById('titulo').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const prioridad = document.getElementById('prioridad').value;
+
+            if (!titulo || !descripcion || !prioridad) {
+                alert('Completa todos los campos.');
+                return;
+            }
+
+            const ticket = 'INC-' + String(incidencias.length + 1).padStart(4, '0');
+            const hoy = new Date();
+            const fecha = hoy.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            incidencias.push({
+                ticket,
+                titulo,
+                descripcion,
+                prioridad,
+                estado: 'pendiente',
+                fecha
+            });
+
+            cerrarModal('modalIncidencia');
+            cargarIncidencias();
+            alert(`Incidencia ${ticket} creada exitosamente.`);
+        }
+
+        function abrirGestionar(ticket) {
+            ticketSeleccionado = ticket;
+            const inc = incidencias.find(i => i.ticket === ticket);
+
+            document.getElementById('modal-ticket-title').textContent = `Gestionar ${ticket}`;
+            document.getElementById('modal-prioridad').textContent = inc.prioridad === 'urgente' ? 'Urgente' : inc.prioridad === 'normal' ? 'Normal' : 'Baja';
+            document.getElementById('modal-estado-actual').textContent = inc.estado === 'pendiente' ? 'Pendiente' : inc.estado === 'proceso' ? 'En proceso' : 'Resuelto';
+            document.getElementById('modal-fecha').textContent = inc.fecha;
+            document.getElementById('modal-descripcion').textContent = inc.descripcion;
+            document.getElementById('nuevo-estado').value = inc.estado;
+
+            document.getElementById('modalGestionar').classList.add('show');
+        }
+
+        function actualizarEstado() {
+            const nuevoEstado = document.getElementById('nuevo-estado').value;
+            const inc = incidencias.find(i => i.ticket === ticketSeleccionado);
+            inc.estado = nuevoEstado;
+
+            cerrarModal('modalGestionar');
+            cargarIncidencias();
+        }
+
+        function logout() {
+            window.location.href = '/';
+        }
+    </script>
 </body>
 </html>

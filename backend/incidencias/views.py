@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
@@ -19,3 +20,7 @@ def login_view(request):
             return JsonResponse({'message': 'OK'}, status=200)
         return JsonResponse({'message': 'Credenciales inválidas.'}, status=401)
     return JsonResponse({'message': 'Método no permitido.'}, status=405)
+
+@login_required
+def dashboard(request):
+    return render(request, 'dashboard.html')
