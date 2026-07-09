@@ -2,279 +2,619 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Sistema de Incidencias</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body>
 
-    <div class="sidebar">
-        <div>
-            <div class="brand">
-                <h2>SisIncidencias</h2>
-            </div>
-            <ul class="menu-items">
-                <li class="active">Todas las incidencias</li>
-                <li>Mis reportes</li>
-            </ul>
-        </div>
-        <div>
-            <div style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 8px;" id="sidebar-user">admin</div>
-            <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
-        </div>
-    </div>
+    <div class="overlay" id="overlay"></div>
 
-    <div class="main-content">
-        <header>
-            <div>
-                <h1>Incidencias</h1>
-                <p>Panel de administracion de tickets</p>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-server"></i>
+            <span>SisIncidencias</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="active" data-section="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a data-section="incidencias"><i class="fas fa-exclamation-triangle"></i> Incidencias</a>
+            <a data-section="cerrados"><i class="fas fa-check-double"></i> Cerrados</a>
+            <a data-section="estadisticas"><i class="fas fa-chart-bar"></i> Estadisticas</a>
+            <a data-section="inventario"><i class="fas fa-laptop"></i> Inventario</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-indicator">
+                <span class="status-dot open" id="statusDot"></span>
+                <span id="statusText">En horario</span>
             </div>
-            <button class="btn-new" onclick="abrirModalNuevo()">+ Nueva incidencia</button>
+            <button class="btn-logout" id="btnLogout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="top-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+                <h1 id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-actions">
+                <span class="time-badge"><i class="fas fa-clock"></i> <span id="currentTime"></span></span>
+                <div class="user-avatar">A</div>
+            </div>
         </header>
 
-        <div class="stats-grid">
-            <div class="stat-card urgent">
-                <div class="number" id="count-urgentes">0</div>
-                <div class="label">Urgentes</div>
+        <section id="section-dashboard" class="section active">
+            <div class="cards-grid">
+                <div class="stat-card">
+                    <div class="stat-title"><i class="fas fa-list"></i> Total Incidencias</div>
+                    <div class="stat-value" id="totalIncidencias">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i class="fas fa-spinner"></i> Abiertas</div>
+                    <div class="stat-value" id="abiertasIncidencias">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i class="fas fa-check-circle"></i> Resueltas</div>
+                    <div class="stat-value" id="resueltasIncidencias">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i class="fas fa-clock"></i> En proceso</div>
+                    <div class="stat-value" id="procesoIncidencias">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i class="fas fa-check-double"></i> Cerradas</div>
+                    <div class="stat-value" id="cerradasIncidencias">0</div>
+                </div>
             </div>
-            <div class="stat-card progress">
-                <div class="number" id="count-proceso">0</div>
-                <div class="label">En proceso</div>
-            </div>
-            <div class="stat-card done">
-                <div class="number" id="count-resueltos">0</div>
-                <div class="label">Resueltos</div>
-            </div>
-        </div>
 
-        <div class="filters-bar">
-            <input type="text" id="searchInput" placeholder="Buscar por ticket o titulo..." oninput="filtrarIncidencias()">
-            <select id="filterPrioridad" onchange="filtrarIncidencias()">
-                <option value="">Todas las prioridades</option>
-                <option value="urgente">Urgente</option>
-                <option value="normal">Normal</option>
-                <option value="baja">Baja</option>
-            </select>
-            <select id="filterEstado" onchange="filtrarIncidencias()">
-                <option value="">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="proceso">En proceso</option>
-                <option value="resuelto">Resuelto</option>
-            </select>
-        </div>
-
-        <div class="tickets-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ticket</th>
-                        <th>Titulo</th>
-                        <th>Prioridad</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                        <th>Accion</th>
-                    </tr>
-                </thead>
-                <tbody id="tickets-body">
-                </tbody>
-            </table>
-            <div class="empty-state" id="emptyState">
-                <h3>No hay incidencias registradas</h3>
-                <p>Crea la primera incidencia para comenzar.</p>
+            <div style="background:#fff; border-radius:16px; padding:20px 24px; border:1px solid var(--border-color); box-shadow:0 2px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="font-size:18px; font-weight:600; color:#1e3c72;">Incidencias recientes</h3>
+                    <span class="text-muted">Ultimas 5</span>
+                </div>
+                <div id="recentIncidenciasList" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="modal-overlay" id="modalIncidencia">
+        <section id="section-incidencias" class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Reporte de Incidencias</h2>
+                    <span class="subtitle">Administra todas las incidencias registradas</span>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <input type="text" id="searchInput" placeholder="Buscar incidencia..." oninput="renderIncidencias()">
+                <select id="filterPrioridad" onchange="renderIncidencias()">
+                    <option value="">Todas las prioridades</option>
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                </select>
+                <select id="filterEstado" onchange="renderIncidencias()">
+                    <option value="">Todos los estados</option>
+                    <option value="abierto">Abierto</option>
+                    <option value="en proceso">En proceso</option>
+                    <option value="resuelto">Resuelto</option>
+                    <option value="cerrado">Cerrado</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titulo</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Usuario</th>
+                            <th>Fecha</th>
+                            <th style="text-align:center;">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaIncidencias"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-estadisticas" class="section">
+            <div class="section-header">
+                <h2>Estadisticas</h2>
+                <span class="subtitle">Distribucion de incidencias</span>
+            </div>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h4>Por tipo</h4>
+                    <canvas id="chartTipo"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h4>Por estado</h4>
+                    <canvas id="chartEstado"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h4>Por prioridad</h4>
+                    <canvas id="chartPrioridad"></canvas>
+                </div>
+            </div>
+            <div class="stats-table">
+                <h4 style="margin-bottom:12px; font-weight:600; color:#1e3c72;">Resumen detallado</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Red</th>
+                            <th>Hardware</th>
+                            <th>Software</th>
+                            <th>Otros</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsSummaryBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-cerrados" class="section">
+            <div class="section-header">
+                <div>
+                    <h2>Tickets Cerrados</h2>
+                    <span class="subtitle">Incidencias que han sido cerradas</span>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titulo</th>
+                            <th>Tipo</th>
+                            <th>Prioridad</th>
+                            <th>Usuario</th>
+                            <th>Fecha</th>
+                            <th style="text-align:center;">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCerrados"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-inventario" class="section">
+            <div class="section-header">
+                <h2>Inventario de Equipos</h2>
+                <span class="subtitle">Equipos tecnologicos registrados</span>
+            </div>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+        </section>
+
+    </main>
+
+    <!-- Modal gestion -->
+    <div class="modal-overlay" id="modalGestion">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 id="modal-title">Nueva incidencia</h3>
-                <button class="close-modal-btn" onclick="cerrarModal('modalIncidencia')">&times;</button>
+                <h3>Gestionar incidencia <span id="modalIncId"></span></h3>
+                <button class="close-modal-btn" onclick="cerrarModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="formIncidencia">
+                <div id="modalInfo"></div>
+                <div class="modal-section">
+                    <div class="modal-section-title"><i class="fas fa-align-left"></i> Descripción</div>
+                    <div class="modal-section-body" id="modalDesc"></div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title"><i class="fas fa-history"></i> Procesos realizados</div>
+                    <div class="modal-section-body" id="modalProcesos"></div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title"><i class="fas fa-paperclip"></i> Evidencia</div>
+                    <div class="modal-section-body" id="modalEvidencia"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="titulo">Titulo</label>
-                        <input type="text" id="titulo" placeholder="Describe brevemente el problema" required style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;outline:none;">
-                    </div>
-                    <div class="form-group">
-                        <label for="descripcion">Descripcion</label>
-                        <textarea id="descripcion" placeholder="Explica el problema a detalle..." required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="prioridad">Prioridad</label>
-                        <select id="prioridad" required>
-                            <option value="">Selecciona una prioridad</option>
-                            <option value="urgente">Urgente</option>
-                            <option value="normal">Normal</option>
-                            <option value="baja">Baja</option>
+                        <label><i class="fas fa-tag"></i> Tipo de reporte</label>
+                        <select id="modalTipo">
+                            <option value="">Seleccionar...</option>
+                            <option value="red">Red</option>
+                            <option value="hardware">Hardware</option>
+                            <option value="software">Software</option>
+                            <option value="otros">Otros</option>
                         </select>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="cerrarModal('modalIncidencia')">Cancelar</button>
-                <button class="btn-save" onclick="guardarIncidencia()">Enviar reporte</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalGestionar">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="modal-ticket-title">Gestionar ticket</h3>
-                <button class="close-modal-btn" onclick="cerrarModal('modalGestionar')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-row">
-                    <div>
-                        <label>Prioridad</label>
-                        <p id="modal-prioridad">--</p>
+                    <div class="form-group">
+                        <label><i class="fas fa-exchange-alt"></i> Cambiar estado</label>
+                        <select id="modalEstado">
+                            <option value="abierto">Abierto</option>
+                            <option value="en proceso">En proceso</option>
+                            <option value="resuelto">Resuelto</option>
+                            <option value="cerrado">Cerrado</option>
+                        </select>
                     </div>
-                    <div>
-                        <label>Estado actual</label>
-                        <p id="modal-estado-actual">--</p>
-                    </div>
-                    <div>
-                        <label>Fecha</label>
-                        <p id="modal-fecha">--</p>
-                    </div>
-                </div>
-                <div class="ticket-desc-box" id="modal-descripcion">Cargando...</div>
-                <div class="form-group">
-                    <label for="nuevo-estado">Cambiar estado</label>
-                    <select id="nuevo-estado">
-                        <option value="pendiente">Pendiente</option>
-                        <option value="proceso">En proceso</option>
-                        <option value="resuelto">Resuelto</option>
-                    </select>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="cerrarModal('modalGestionar')">Cancelar</button>
-                <button class="btn-save" onclick="actualizarEstado()">Guardar cambios</button>
+                <div class="modal-footer-left">
+                    <span class="badge" id="modalEstadoBadge"></span>
+                    <span class="modal-ticket-ref" id="modalTicketRef"></span>
+                </div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="guardarEstado()"><i class="fas fa-save"></i> Guardar cambios</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let incidencias = [];
-        let ticketSeleccionado = null;
+        let incidencias = [
+            { id: 1, titulo: 'Caida de red en piso 3', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'Red corporativa', prioridad: 'alta', estado: 'abierto', usuario: 'Carlos R.', fecha: '2026-07-08', hora: '09:15 AM', descripcion: 'Sin conectividad en toda el ala norte del edificio. No se puede acceder a recursos compartidos ni a internet.', procesos: 'Estaba transfiriendo archivos al servidor central cuando se perdió la conexión de red.', evidencia: [] },
+            { id: 2, titulo: 'Laptop no enciende', nombre: 'Marta Leticia Gómez', area: 'Contabilidad', sistema: 'Equipo personal', prioridad: 'media', estado: 'en proceso', usuario: 'Marta L.', fecha: '2026-07-08', hora: '10:30 AM', descripcion: 'Al presionar el botón de encendido no hay respuesta. La laptop estaba conectada a la corriente.', procesos: 'Terminé mi jornada y apagué la laptop normalmente. Al día siguiente ya no encendió.', evidencia: [] },
+            { id: 3, titulo: 'Error en sistema SAP', nombre: 'Jorge Prieto Díaz', area: 'Producción', sistema: 'SAP ERP', prioridad: 'alta', estado: 'resuelto', usuario: 'Jorge P.', fecha: '2026-07-07', hora: '11:45 AM', descripcion: 'El sistema SAP no permite generar pedidos de compra. Muestra error "DB_CONNECTION_FAILED" al intentar guardar.', procesos: 'Estaba generando una orden de compra para el proveedor de materias primas, al dar clic en guardar apareció el error.', evidencia: [] },
+            { id: 4, titulo: 'Monitor parpadea', nombre: 'Ana Gabriela Soto', area: 'Recursos Humanos', sistema: 'Equipo de escritorio', prioridad: 'baja', estado: 'cerrado', usuario: 'Ana G.', fecha: '2026-07-06', hora: '08:00 AM', descripcion: 'El monitor presenta parpadeo intermitente en la pantalla. Se reemplazó el cable HDMI y se corrigió.', procesos: 'Al encender el equipo por la mañana el monitor comenzó a parpadear.', evidencia: [] },
+            { id: 5, titulo: 'Impresora sin tinta', nombre: 'Luis Martínez Herrera', area: 'Dirección', sistema: 'Impresora HP LaserJet', prioridad: 'media', estado: 'abierto', usuario: 'Luis M.', fecha: '2026-07-08', hora: '12:10 PM', descripcion: 'La impresora muestra mensaje de tinta baja en todos los colores. No imprime correctamente.', procesos: 'Intenté imprimir un documento de 10 páginas pero salen rayas y colores débiles.', evidencia: [] },
+            { id: 6, titulo: 'VPN no conecta', nombre: 'Elena Rojas Castillo', area: 'Ventas', sistema: 'VPN Corporativo', prioridad: 'alta', estado: 'en proceso', usuario: 'Elena R.', fecha: '2026-07-07', hora: '02:20 PM', descripcion: 'Error de autenticación al intentar conectar VPN desde casa. El cliente VPN muestra "Authentication failed".', procesos: 'Estaba trabajando desde casa, intenté conectarme a la VPN y no fue posible.', evidencia: [] }
+        ];
 
-        function cargarIncidencias() {
-            const tbody = document.getElementById('tickets-body');
-            const empty = document.getElementById('emptyState');
-            tbody.innerHTML = '';
+        let inventory = [
+            { id: 1, nombre: 'Laptop Dell XPS 13', tipo: 'laptop', estado: 'disponible', ubicacion: 'Oficina 301', serial: 'SN-1234-5678', compra: '2025-03-10' },
+            { id: 2, nombre: 'Monitor LG 27"', tipo: 'monitor', estado: 'en uso', ubicacion: 'Oficina 205', serial: 'SN-8765-4321', compra: '2024-11-22' },
+            { id: 3, nombre: 'Impresora HP LaserJet', tipo: 'impresora', estado: 'mantenimiento', ubicacion: 'Sala de impresion', serial: 'SN-1122-3344', compra: '2023-08-15' },
+            { id: 4, nombre: 'Router Cisco 1921', tipo: 'red', estado: 'disponible', ubicacion: 'Rack principal', serial: 'SN-9988-7766', compra: '2025-01-05' },
+            { id: 5, nombre: 'Servidor Dell PowerEdge R740', tipo: 'servidor', estado: 'en uso', ubicacion: 'Data Center', serial: 'SN-5544-3322', compra: '2024-06-20' },
+            { id: 6, nombre: 'Tablet iPad Air 5', tipo: 'tablet', estado: 'disponible', ubicacion: 'Recepcion', serial: 'SN-7788-9900', compra: '2025-02-14' },
+            { id: 7, nombre: 'Switch Cisco Catalyst 2960', tipo: 'red', estado: 'en uso', ubicacion: 'Piso 2', serial: 'SN-6677-8899', compra: '2024-09-01' },
+            { id: 8, nombre: 'Proyector Epson EB-2250U', tipo: 'proyector', estado: 'disponible', ubicacion: 'Sala de juntas', serial: 'SN-4455-6677', compra: '2023-12-10' }
+        ];
 
-            if (incidencias.length === 0) {
-                empty.style.display = 'block';
-                document.querySelector('.tickets-container table').style.display = 'none';
-                return;
-            }
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.sidebar-nav a');
+        const pageTitle = document.getElementById('pageTitle');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
 
-            empty.style.display = 'none';
-            document.querySelector('.tickets-container table').style.display = '';
+        function navigateTo(sectionId) {
+            const sectionName = sectionId.replace('section-', '');
+            sections.forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(sectionId);
+            if (target) target.classList.add('active');
 
-            const filtroTexto = document.getElementById('searchInput').value.toLowerCase();
-            const filtroPrioridad = document.getElementById('filterPrioridad').value;
-            const filtroEstado = document.getElementById('filterEstado').value;
-
-            const filtradas = incidencias.filter(i => {
-                const matchTexto = i.titulo.toLowerCase().includes(filtroTexto) || i.ticket.toLowerCase().includes(filtroTexto);
-                const matchPrioridad = !filtroPrioridad || i.prioridad === filtroPrioridad;
-                const matchEstado = !filtroEstado || i.estado === filtroEstado;
-                return matchTexto && matchPrioridad && matchEstado;
+            navLinks.forEach(a => a.classList.remove('active'));
+            navLinks.forEach(a => {
+                if (a.dataset.section === sectionName) a.classList.add('active');
             });
 
-            filtradas.forEach(i => {
+            const titles = { dashboard: 'Dashboard', incidencias: 'Incidencias', cerrados: 'Cerrados', estadisticas: 'Estadisticas', inventario: 'Inventario' };
+            pageTitle.textContent = titles[sectionName] || sectionName;
+
+            closeSidebar();
+
+            if (sectionName === 'estadisticas') {
+                setTimeout(() => { updateCharts(); updateStatsTable(); }, 100);
+            }
+            if (sectionName === 'dashboard') {
+                updateDashboard();
+            }
+            if (sectionName === 'cerrados') {
+                renderCerrados();
+            }
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('section-' + link.dataset.section);
+            });
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+        document.getElementById('modalGestion').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModal();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            updateSchedule(now);
+        }
+
+        function updateSchedule(now) {
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const currentMinutes = hour * 60 + minute;
+            const startMinutes = 9 * 60;
+            const endMinutes = 14 * 60;
+            const isActive = currentMinutes >= startMinutes && currentMinutes < endMinutes;
+
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            if (isActive) {
+                dot.className = 'status-dot open';
+                statusText.textContent = 'En horario';
+            } else {
+                dot.className = 'status-dot closed';
+                statusText.textContent = 'Fuera de horario';
+            }
+        }
+
+        function renderIncidencias() {
+            const tbody = document.getElementById('tablaIncidencias');
+            tbody.innerHTML = '';
+            const search = (document.getElementById('searchInput').value || '').toLowerCase();
+            const filterPri = document.getElementById('filterPrioridad').value;
+            const filterEst = document.getElementById('filterEstado').value;
+            const filtered = incidencias.filter(inc => {
+                if (inc.estado === 'cerrado') return false;
+                const matchSearch = !search || inc.titulo.toLowerCase().includes(search) || inc.usuario.toLowerCase().includes(search) || String(inc.id).includes(search);
+                const matchPri = !filterPri || inc.prioridad === filterPri;
+                const matchEst = !filterEst || inc.estado === filterEst;
+                return matchSearch && matchPri && matchEst;
+            });
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8;">No se encontraron incidencias</td></tr>';
+                updateDashboard();
+                updateRecent();
+                return;
+            }
+            filtered.forEach(inc => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${i.ticket}</strong></td>
-                    <td>${i.titulo}</td>
-                    <td><span class="badge p-${i.prioridad}">${i.prioridad === 'urgente' ? 'Urgente' : i.prioridad === 'normal' ? 'Normal' : 'Baja'}</span></td>
-                    <td><span class="badge badge-status ${i.estado === 'proceso' ? 'proceso' : i.estado === 'resuelto' ? 'resuelto' : ''}">${i.estado === 'pendiente' ? 'Pendiente' : i.estado === 'proceso' ? 'En proceso' : 'Resuelto'}</span></td>
-                    <td style="font-size:0.85rem;color:#64748b;">${i.fecha}</td>
-                    <td><button class="btn-action" onclick="abrirGestionar('${i.ticket}')">Gestionar</button></td>
+                    <td><strong>#${inc.id}</strong></td>
+                    <td>${inc.titulo}</td>
+                    <td><span class="badge badge-soft">${inc.tipo || ''}</span></td>
+                    <td><span class="badge ${inc.prioridad === 'alta' ? 'badge-red' : inc.prioridad === 'media' ? 'badge-yellow' : 'badge-soft'}">${inc.prioridad}</span></td>
+                    <td><span class="badge ${inc.estado === 'abierto' ? 'badge-red' : inc.estado === 'en proceso' ? 'badge-yellow' : inc.estado === 'resuelto' ? 'badge-green' : 'badge-gray'}">${inc.estado}</span></td>
+                    <td>${inc.usuario || '—'}</td>
+                    <td>${inc.fecha}</td>
+                    <td style="text-align:center;">
+                        <button class="btn-action" onclick="abrirModal(${inc.id})"><i class="fas fa-cog"></i> Gestionar</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('count-urgentes').textContent = incidencias.filter(i => i.prioridad === 'urgente').length;
-            document.getElementById('count-proceso').textContent = incidencias.filter(i => i.estado === 'proceso').length;
-            document.getElementById('count-resueltos').textContent = incidencias.filter(i => i.estado === 'resuelto').length;
+            updateDashboard();
+            updateRecent();
         }
 
-        function filtrarIncidencias() {
-            cargarIncidencias();
-        }
-
-        function abrirModalNuevo() {
-            document.getElementById('modal-title').textContent = 'Nueva incidencia';
-            document.getElementById('formIncidencia').reset();
-            document.getElementById('modalIncidencia').classList.add('show');
-        }
-
-        function cerrarModal(id) {
-            document.getElementById(id).classList.remove('show');
-            ticketSeleccionado = null;
-        }
-
-        function guardarIncidencia() {
-            const titulo = document.getElementById('titulo').value.trim();
-            const descripcion = document.getElementById('descripcion').value.trim();
-            const prioridad = document.getElementById('prioridad').value;
-
-            if (!titulo || !descripcion || !prioridad) {
-                alert('Completa todos los campos.');
+        function renderCerrados() {
+            const tbody = document.getElementById('tablaCerrados');
+            tbody.innerHTML = '';
+            const cerrados = incidencias.filter(i => i.estado === 'cerrado');
+            if (cerrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:#94a3b8;">No hay tickets cerrados</td></tr>';
                 return;
             }
+            cerrados.forEach(inc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>#${inc.id}</strong></td>
+                    <td>${inc.titulo}</td>
+                    <td><span class="badge badge-soft">${inc.tipo || ''}</span></td>
+                    <td><span class="badge ${inc.prioridad === 'alta' ? 'badge-red' : inc.prioridad === 'media' ? 'badge-yellow' : 'badge-soft'}">${inc.prioridad}</span></td>
+                    <td>${inc.usuario || '—'}</td>
+                    <td>${inc.fecha}</td>
+                    <td style="text-align:center;">
+                        <button class="btn-action" onclick="abrirModal(${inc.id})"><i class="fas fa-eye"></i> Ver</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-            const ticket = 'INC-' + String(incidencias.length + 1).padStart(4, '0');
-            const hoy = new Date();
-            const fecha = hoy.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        function updateRecent() {
+            const list = document.getElementById('recentIncidenciasList');
+            const sorted = [...incidencias].sort((a, b) => b.id - a.id).slice(0, 5);
+            list.innerHTML = '';
+            if (sorted.length === 0) {
+                list.innerHTML = '<div class="text-muted" style="padding:8px 0;">No hay incidencias recientes</div>';
+                return;
+            }
+            sorted.forEach(inc => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9;';
+                const badgeClass = inc.estado === 'abierto' ? 'badge-red' : inc.estado === 'en proceso' ? 'badge-yellow' : inc.estado === 'resuelto' ? 'badge-green' : 'badge-gray';
+                div.innerHTML = `
+                    <div>
+                        <strong style="color:#1e3c72;">#${inc.id}</strong>
+                        <span style="color:#1e293b;">${inc.titulo}</span>
+                        <span class="badge ${badgeClass}" style="font-size:11px; margin-left:8px;">${inc.estado}</span>
+                    </div>
+                    <span style="font-size:12px; color:#64748b;">${inc.fecha}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
 
-            incidencias.push({
-                ticket,
-                titulo,
-                descripcion,
-                prioridad,
-                estado: 'pendiente',
-                fecha
+        function abrirModal(id) {
+            const inc = incidencias.find(i => i.id === id);
+            if (!inc) return;
+            document.getElementById('modalIncId').textContent = '#' + inc.id + ' - ' + inc.titulo;
+            document.getElementById('modalInfo').innerHTML = `
+                <div class="info-row">
+                    <div><label>Nombre completo</label>${inc.nombre}</div>
+                    <div><label>Area / Departamento</label>${inc.area}</div>
+                </div>
+                <div class="info-row">
+                    <div><label>Sistema / Modulo</label>${inc.sistema}</div>
+                    <div><label>Prioridad</label><span class="badge ${inc.prioridad === 'alta' ? 'badge-red' : inc.prioridad === 'media' ? 'badge-yellow' : 'badge-soft'}">${inc.prioridad}</span></div>
+                </div>
+                <div class="info-row">
+                    <div><label>Fecha</label>${inc.fecha}</div>
+                    <div><label>Hora</label>${inc.hora}</div>
+                </div>
+            `;
+            document.getElementById('modalDesc').textContent = inc.descripcion;
+            document.getElementById('modalProcesos').textContent = inc.procesos;
+            const evidenciaDiv = document.getElementById('modalEvidencia');
+            if (inc.evidencia && inc.evidencia.length > 0) {
+                evidenciaDiv.innerHTML = inc.evidencia.map(url =>
+                    `<img src="${url}" alt="Evidencia">`
+                ).join('');
+            } else {
+                evidenciaDiv.innerHTML = '<span style="color:#94a3b8; font-style:italic;">Sin evidencia adjunta</span>';
+            }
+            document.getElementById('modalEstado').value = inc.estado;
+            document.getElementById('modalTipo').value = inc.tipo || '';
+            const badgeClasses = { 'abierto': 'badge-red', 'en proceso': 'badge-yellow', 'resuelto': 'badge-green', 'cerrado': 'badge-gray' };
+            document.getElementById('modalEstadoBadge').className = 'badge ' + (badgeClasses[inc.estado] || 'badge-gray');
+            document.getElementById('modalEstadoBadge').textContent = inc.estado;
+            document.getElementById('modalTicketRef').textContent = 'Ticket #' + inc.id;
+
+            const isCerrado = inc.estado === 'cerrado';
+            document.getElementById('modalEstado').closest('.form-row').style.display = isCerrado ? 'none' : 'grid';
+            document.querySelector('.modal-footer-right').style.display = isCerrado ? 'none' : 'flex';
+
+            document.getElementById('modalGestion').classList.add('show');
+            window._editingId = id;
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalGestion').classList.remove('show');
+            window._editingId = null;
+        }
+
+        function guardarEstado() {
+            const id = window._editingId;
+            if (!id) return;
+            const nuevoEstado = document.getElementById('modalEstado').value;
+            const nuevoTipo = document.getElementById('modalTipo').value;
+            const idx = incidencias.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                incidencias[idx].estado = nuevoEstado;
+                if (nuevoTipo) incidencias[idx].tipo = nuevoTipo;
+            }
+            cerrarModal();
+            renderIncidencias();
+            renderCerrados();
+            updateCharts();
+            updateStatsTable();
+            if (nuevoEstado === 'cerrado') {
+                navigateTo('section-cerrados');
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('totalIncidencias').textContent = incidencias.length;
+            document.getElementById('abiertasIncidencias').textContent = incidencias.filter(i => i.estado === 'abierto').length;
+            document.getElementById('resueltasIncidencias').textContent = incidencias.filter(i => i.estado === 'resuelto').length;
+            document.getElementById('procesoIncidencias').textContent = incidencias.filter(i => i.estado === 'en proceso').length;
+            document.getElementById('cerradasIncidencias').textContent = incidencias.filter(i => i.estado === 'cerrado').length;
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+            inventory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'inventory-item';
+                const statusMap = { 'disponible': 'badge-green', 'en uso': 'badge-yellow', 'mantenimiento': 'badge-red' };
+                div.innerHTML = `
+                    <div class="inv-title"><i class="fas fa-desktop" style="margin-right:10px; color:#2a5298;"></i>${item.nombre}</div>
+                    <div class="inv-detail">${item.tipo} · ${item.ubicacion}</div>
+                    <div class="inv-meta"><span><i class="fas fa-barcode"></i> ${item.serial}</span><span><i class="fas fa-calendar-alt"></i> ${item.compra}</span></div>
+                    <div class="inv-status"><span class="badge ${statusMap[item.estado] || 'badge-gray'}">${item.estado}</span></div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        let chartTipo, chartEstado, chartPrioridad;
+
+        function updateCharts() {
+            const tipos = ['red', 'hardware', 'software', 'otros'];
+            const estados = ['abierto', 'en proceso', 'resuelto', 'cerrado'];
+            const prioridades = ['alta', 'media', 'baja'];
+
+            const countTipo = tipos.map(t => incidencias.filter(i => i.tipo === t).length);
+            const countEstado = estados.map(e => incidencias.filter(i => i.estado === e).length);
+            const countPrioridad = prioridades.map(p => incidencias.filter(i => i.prioridad === p).length);
+
+            if (chartTipo) chartTipo.destroy();
+            if (chartEstado) chartEstado.destroy();
+            if (chartPrioridad) chartPrioridad.destroy();
+
+            chartTipo = new Chart(document.getElementById('chartTipo'), {
+                type: 'doughnut',
+                data: { labels: ['Red', 'Hardware', 'Software', 'Otros'], datasets: [{ data: countTipo, backgroundColor: ['#2a5298', '#8b5cf6', '#10b981', '#f59e0b'], borderWidth: 2, borderColor: '#fff' }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } } }
             });
 
-            cerrarModal('modalIncidencia');
-            cargarIncidencias();
-            alert(`Incidencia ${ticket} creada exitosamente.`);
+            chartEstado = new Chart(document.getElementById('chartEstado'), {
+                type: 'doughnut',
+                data: { labels: ['Abierto', 'En proceso', 'Resuelto', 'Cerrado'], datasets: [{ data: countEstado, backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#94a3b8'], borderWidth: 2, borderColor: '#fff' }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } } }
+            });
+
+            chartPrioridad = new Chart(document.getElementById('chartPrioridad'), {
+                type: 'bar',
+                data: { labels: ['Alta', 'Media', 'Baja'], datasets: [{ label: 'Incidencias', data: countPrioridad, backgroundColor: ['#ef4444', '#f59e0b', '#2a5298'], borderRadius: 6 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#64748b' } }, x: { ticks: { color: '#64748b' } } } }
+            });
         }
 
-        function abrirGestionar(ticket) {
-            ticketSeleccionado = ticket;
-            const inc = incidencias.find(i => i.ticket === ticket);
-
-            document.getElementById('modal-ticket-title').textContent = `Gestionar ${ticket}`;
-            document.getElementById('modal-prioridad').textContent = inc.prioridad === 'urgente' ? 'Urgente' : inc.prioridad === 'normal' ? 'Normal' : 'Baja';
-            document.getElementById('modal-estado-actual').textContent = inc.estado === 'pendiente' ? 'Pendiente' : inc.estado === 'proceso' ? 'En proceso' : 'Resuelto';
-            document.getElementById('modal-fecha').textContent = inc.fecha;
-            document.getElementById('modal-descripcion').textContent = inc.descripcion;
-            document.getElementById('nuevo-estado').value = inc.estado;
-
-            document.getElementById('modalGestionar').classList.add('show');
+        function updateStatsTable() {
+            const tipos = ['red', 'hardware', 'software', 'otros'];
+            const estados = ['abierto', 'en proceso', 'resuelto', 'cerrado'];
+            const tbody = document.getElementById('statsSummaryBody');
+            tbody.innerHTML = '';
+            estados.forEach(est => {
+                const tr = document.createElement('tr');
+                let row = '<td><strong>' + est.charAt(0).toUpperCase() + est.slice(1) + '</strong></td>';
+                let total = 0;
+                tipos.forEach(tipo => {
+                    const count = incidencias.filter(i => i.estado === est && i.tipo === tipo).length;
+                    row += '<td>' + count + '</td>';
+                    total += count;
+                });
+                row += '<td><strong>' + total + '</strong></td>';
+                tr.innerHTML = row;
+                tbody.appendChild(tr);
+            });
+            const trTotal = document.createElement('tr');
+            let rowTotal = '<td><strong>Total</strong></td>';
+            tipos.forEach(tipo => {
+                rowTotal += '<td><strong>' + incidencias.filter(i => i.tipo === tipo).length + '</strong></td>';
+            });
+            rowTotal += '<td><strong>' + incidencias.length + '</strong></td>';
+            trTotal.innerHTML = rowTotal;
+            tbody.appendChild(trTotal);
         }
 
-        function actualizarEstado() {
-            const nuevoEstado = document.getElementById('nuevo-estado').value;
-            const inc = incidencias.find(i => i.ticket === ticketSeleccionado);
-            inc.estado = nuevoEstado;
-
-            cerrarModal('modalGestionar');
-            cargarIncidencias();
-        }
-
-        function logout() {
+        document.getElementById('btnLogout').addEventListener('click', () => {
             window.location.href = '/';
+        });
+
+        function init() {
+            renderIncidencias();
+            renderCerrados();
+            renderInventory();
+            updateClock();
+            setInterval(updateClock, 10000);
+            navigateTo('section-dashboard');
+            setTimeout(() => { updateCharts(); updateStatsTable(); }, 300);
         }
+
+        init();
+        window.eliminarIncidencia = eliminarIncidencia;
     </script>
 </body>
 </html>
