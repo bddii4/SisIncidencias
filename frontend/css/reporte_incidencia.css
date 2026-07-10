@@ -1,0 +1,174 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            min-height: 100vh; background: linear-gradient(135deg, #eef2f7 0%, #dce3ed 100%);
+            padding: 30px;
+        }
+        .page { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .header-card {
+            background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff;
+            border-radius: 16px; padding: 24px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-card h1 { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .header-card p { font-size: 0.85rem; opacity: 0.85; }
+        .btn-nuevo {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-nuevo:hover { background: rgba(255,255,255,0.25); }
+
+        .form-card {
+            background: #fff; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(30,60,114,0.08);
+            display: none;
+        }
+        .form-card.open { display: block; }
+        .form-body { padding: 24px 28px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 600; font-size: 0.85rem; color: #1e3c72; margin-bottom: 4px;
+        }
+        .form-group label i { width: 16px; color: #2a5298; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid #dce3ed; border-radius: 8px;
+            font-size: 0.9rem; outline: none; font-family: inherit; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2a5298; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .file-upload {
+            border: 1.5px dashed #dce3ed; border-radius: 8px; padding: 16px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+        }
+        .file-upload:hover { border-color: #2a5298; background: #f8fafc; }
+        .file-upload i { font-size: 1.5rem; color: #2a5298; }
+        .file-upload p { font-size: 0.8rem; color: #64748b; }
+        .file-upload input { display: none; }
+        .file-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .file-item {
+            background: #f1f5f9; padding: 4px 10px; border-radius: 6px;
+            font-size: 0.78rem; color: #475569; display: flex; align-items: center; gap: 6px;
+        }
+        .file-item .remove { cursor: pointer; color: #ef4444; font-weight: 700; margin-left: 4px; }
+        .btn-enviar {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-enviar:hover { box-shadow: 0 4px 16px rgba(42,82,152,0.3); }
+        .btn-enviar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .report-list { display: flex; flex-direction: column; gap: 12px; }
+        .report-card {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(30,60,114,0.05);
+            overflow: hidden; transition: box-shadow 0.2s;
+        }
+        .report-card:hover { box-shadow: 0 4px 20px rgba(30,60,114,0.1); }
+        .report-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; cursor: pointer; gap: 12px;
+        }
+        .report-head-left { flex: 1; }
+        .report-head-left .titulo { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+        .report-head-left .meta { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; display: flex; gap: 12px; }
+        .report-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 600;
+        }
+        .badge-red { background: #fee2e2; color: #ef4444; }
+        .badge-yellow { background: #fef3c7; color: #f59e0b; }
+        .badge-green { background: #d1fae5; color: #10b981; }
+        .badge-gray { background: #f1f5f9; color: #64748b; }
+        .badge-orange { background: #ffedd5; color: #ea580c; }
+        .badge-blue { background: #dbeafe; color: #2563eb; }
+        .report-arrow { color: #94a3b8; transition: transform 0.2s; }
+        .report-arrow.open { transform: rotate(180deg); }
+
+        .report-chat {
+            border-top: 1px solid #eef2f7;
+            display: none;
+        }
+        .report-chat.open { display: block; }
+        .chat-header {
+            padding: 10px 20px; font-size: 0.8rem; font-weight: 600;
+            color: #1e3c72; background: #f8fafc;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #eef2f7;
+        }
+        .chat-body {
+            padding: 12px 20px; max-height: 260px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .chat-msg {
+            max-width: 80%; padding: 10px 14px; border-radius: 12px;
+            font-size: 0.85rem; line-height: 1.5;
+        }
+        .chat-msg.admin {
+            background: #f1f5f9; color: #334155; align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-msg.yo {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg .time { font-size: 0.7rem; opacity: 0.7; margin-top: 4px; }
+        .chat-msg.yo .time { text-align: right; }
+        .chat-input-area {
+            padding: 12px 20px; border-top: 1px solid #eef2f7;
+            display: flex; gap: 8px;
+        }
+        .chat-input-area.disabled {
+            background: #f8fafc;
+        }
+        .chat-input-area.disabled p {
+            color: #94a3b8; font-size: 0.85rem; text-align: center; width: 100%;
+        }
+        .chat-input-area textarea {
+            flex: 1; padding: 8px 10px; border: 1.5px solid #dce3ed;
+            border-radius: 8px; font-size: 0.85rem; outline: none; font-family: inherit;
+            resize: none; min-height: 36px;
+        }
+        .chat-input-area textarea:focus { border-color: #2a5298; }
+        .chat-send {
+            padding: 8px 16px; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; font-weight: 600; font-size: 0.8rem; cursor: pointer;
+            white-space: nowrap; display: flex; align-items: center; gap: 6px;
+        }
+        .chat-send:hover { box-shadow: 0 2px 10px rgba(42,82,152,0.3); }
+
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            background: #10b981; color: #fff; padding: 14px 22px;
+            border-radius: 10px; box-shadow: 0 6px 20px rgba(16,185,129,0.3);
+            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+            transform: translateX(120%); transition: transform 0.4s ease;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { background: #ef4444; }
+
+        .empty-msg { text-align: center; padding: 40px; color: #94a3b8; }
+        .empty-msg i { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-msg p { font-size: 0.9rem; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: #64748b; text-decoration: none; font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #1e3c72; }
+
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .header-card { flex-direction: column; gap: 12px; text-align: center; }
+            .report-head { flex-wrap: wrap; }
+        }
