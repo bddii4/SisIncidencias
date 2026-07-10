@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis Reportes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            min-height: 100vh; background: linear-gradient(135deg, #eef2f7 0%, #dce3ed 100%);
+            padding: 30px;
+        }
+        .page { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .header-card {
+            background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff;
+            border-radius: 16px; padding: 24px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-card h1 { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .header-card p { font-size: 0.85rem; opacity: 0.85; }
+        .btn-nuevo {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-nuevo:hover { background: rgba(255,255,255,0.25); }
+
+        .form-card {
+            background: #fff; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(30,60,114,0.08);
+            display: none;
+        }
+        .form-card.open { display: block; }
+        .form-body { padding: 24px 28px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 600; font-size: 0.85rem; color: #1e3c72; margin-bottom: 4px;
+        }
+        .form-group label i { width: 16px; color: #2a5298; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid #dce3ed; border-radius: 8px;
+            font-size: 0.9rem; outline: none; font-family: inherit; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2a5298; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .file-upload {
+            border: 1.5px dashed #dce3ed; border-radius: 8px; padding: 16px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+        }
+        .file-upload:hover { border-color: #2a5298; background: #f8fafc; }
+        .file-upload i { font-size: 1.5rem; color: #2a5298; }
+        .file-upload p { font-size: 0.8rem; color: #64748b; }
+        .file-upload input { display: none; }
+        .file-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .file-item {
+            background: #f1f5f9; padding: 4px 10px; border-radius: 6px;
+            font-size: 0.78rem; color: #475569; display: flex; align-items: center; gap: 6px;
+        }
+        .file-item .remove { cursor: pointer; color: #ef4444; font-weight: 700; margin-left: 4px; }
+        .btn-enviar {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-enviar:hover { box-shadow: 0 4px 16px rgba(42,82,152,0.3); }
+        .btn-enviar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .report-list { display: flex; flex-direction: column; gap: 12px; }
+        .report-card {
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(30,60,114,0.05);
+            overflow: hidden; transition: box-shadow 0.2s;
+        }
+        .report-card:hover { box-shadow: 0 4px 20px rgba(30,60,114,0.1); }
+        .report-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; cursor: pointer; gap: 12px;
+        }
+        .report-head-left { flex: 1; }
+        .report-head-left .titulo { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+        .report-head-left .meta { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; display: flex; gap: 12px; }
+        .report-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 0.72rem; font-weight: 600;
+        }
+        .badge-red { background: #fee2e2; color: #ef4444; }
+        .badge-yellow { background: #fef3c7; color: #f59e0b; }
+        .badge-green { background: #d1fae5; color: #10b981; }
+        .badge-gray { background: #f1f5f9; color: #64748b; }
+        .badge-orange { background: #ffedd5; color: #ea580c; }
+        .badge-blue { background: #dbeafe; color: #2563eb; }
+        .report-arrow { color: #94a3b8; transition: transform 0.2s; }
+        .report-arrow.open { transform: rotate(180deg); }
+
+        .report-chat {
+            border-top: 1px solid #eef2f7;
+            display: none;
+        }
+        .report-chat.open { display: block; }
+        .chat-header {
+            padding: 10px 20px; font-size: 0.8rem; font-weight: 600;
+            color: #1e3c72; background: #f8fafc;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #eef2f7;
+        }
+        .chat-body {
+            padding: 12px 20px; max-height: 260px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .chat-msg {
+            max-width: 80%; padding: 10px 14px; border-radius: 12px;
+            font-size: 0.85rem; line-height: 1.5;
+        }
+        .chat-msg.admin {
+            background: #f1f5f9; color: #334155; align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-msg.yo {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg .time { font-size: 0.7rem; opacity: 0.7; margin-top: 4px; }
+        .chat-msg.yo .time { text-align: right; }
+        .chat-input-area {
+            padding: 12px 20px; border-top: 1px solid #eef2f7;
+            display: flex; gap: 8px;
+        }
+        .chat-input-area.disabled {
+            background: #f8fafc;
+        }
+        .chat-input-area.disabled p {
+            color: #94a3b8; font-size: 0.85rem; text-align: center; width: 100%;
+        }
+        .chat-input-area textarea {
+            flex: 1; padding: 8px 10px; border: 1.5px solid #dce3ed;
+            border-radius: 8px; font-size: 0.85rem; outline: none; font-family: inherit;
+            resize: none; min-height: 36px;
+        }
+        .chat-input-area textarea:focus { border-color: #2a5298; }
+        .chat-send {
+            padding: 8px 16px; border: none; border-radius: 8px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff; font-weight: 600; font-size: 0.8rem; cursor: pointer;
+            white-space: nowrap; display: flex; align-items: center; gap: 6px;
+        }
+        .chat-send:hover { box-shadow: 0 2px 10px rgba(42,82,152,0.3); }
+
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            background: #10b981; color: #fff; padding: 14px 22px;
+            border-radius: 10px; box-shadow: 0 6px 20px rgba(16,185,129,0.3);
+            font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+            transform: translateX(120%); transition: transform 0.4s ease;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { background: #ef4444; }
+
+        .empty-msg { text-align: center; padding: 40px; color: #94a3b8; }
+        .empty-msg i { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-msg p { font-size: 0.9rem; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: #64748b; text-decoration: none; font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #1e3c72; }
+
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .header-card { flex-direction: column; gap: 12px; text-align: center; }
+            .report-head { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+
+        <div class="header-card">
+            <div>
+                <h1><i class="fas fa-exclamation-triangle"></i> Mis Reportes</h1>
+                <p>Administra tus incidencias reportadas</p>
+            </div>
+            <button class="btn-nuevo" id="btnNuevo"><i class="fas fa-plus"></i> Nuevo reporte</button>
+        </div>
+
+        <div class="form-card" id="formCard">
+            <div class="form-body">
+                <form id="reportForm" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Nombre completo</label>
+                            <input type="text" id="nombre" placeholder="Ej. Juan Pérez López" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-building"></i> Área / Departamento</label>
+                            <input type="text" id="area" placeholder="Ej. Sistemas, Contabilidad..." required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Título del reporte</label>
+                        <input type="text" id="titulo" placeholder="Ej. Caída de red en oficina principal" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-desktop"></i> Sistema / Módulo afectado</label>
+                        <input type="text" id="sistema" placeholder="Ej. SAP, Red corporativa, Laptop..." required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Descripción detallada</label>
+                        <textarea id="descripcion" placeholder="Describe el problema con el mayor detalle posible..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-history"></i> ¿Qué estabas haciendo cuando ocurrió?</label>
+                        <textarea id="procesos" placeholder="Describe los pasos antes del problema..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-paperclip"></i> Evidencia <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+                        <div class="file-upload" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haz clic para adjuntar capturas o video</p>
+                            <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+                        </div>
+                        <div class="file-list" id="fileList"></div>
+                    </div>
+                    <button type="submit" class="btn-enviar" id="btnSubmit"><i class="fas fa-paper-plane"></i> Enviar reporte</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="report-list" id="reportList"></div>
+
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Volver al dashboard</a>
+    </div>
+
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg"></span></div>
+
+    <script>
+        let nextId = 10;
+        let reportes = [
+            { id: 1, titulo: 'Caida de red en piso 3', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'Red corporativa', prioridad: 'alta', estado: 'espera información', fecha: '2026-07-08', hora: '09:15 AM', chat: [
+                { de: 'admin', texto: 'Hemos recibido tu reporte, estamos revisando.', fecha: '2026-07-08 09:30 AM' },
+                { de: 'admin', texto: '¿Podrías decirnos qué luces parpadean en el switch?', fecha: '2026-07-08 09:45 AM' },
+                { de: 'yo', texto: 'Luces naranja en los puertos 3, 4 y 5.', fecha: '2026-07-08 10:00 AM' },
+                { de: 'admin', texto: 'Gracias, con eso tenemos más claro el problema.', fecha: '2026-07-08 10:15 AM' }
+            ]},
+            { id: 2, titulo: 'Laptop no enciende', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'Equipo personal', prioridad: 'media', estado: 'en proceso', fecha: '2026-07-08', hora: '10:30 AM', chat: [
+                { de: 'admin', texto: '¿Probaste con otro cargador?', fecha: '2026-07-08 11:00 AM' },
+                { de: 'yo', texto: 'Si, probé con otro cargador y tampoco enciende.', fecha: '2026-07-08 11:20 AM' }
+            ]},
+            { id: 3, titulo: 'Error en sistema SAP', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'SAP ERP', prioridad: 'alta', estado: 'cerrado', fecha: '2026-07-07', hora: '11:45 AM', chat: [
+                { de: 'admin', texto: 'Reiniciamos el servidor SAP, ¿puedes probar?', fecha: '2026-07-07 02:00 PM' },
+                { de: 'yo', texto: 'Ya funciona correctamente.', fecha: '2026-07-07 02:30 PM' },
+                { de: 'admin', texto: 'Perfecto, cerramos el reporte.', fecha: '2026-07-07 03:00 PM' }
+            ]},
+            { id: 4, titulo: 'Impresora sin tinta', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'Impresora HP LaserJet', prioridad: 'media', estado: 'abierto', fecha: '2026-07-08', hora: '12:10 PM', chat: [] },
+            { id: 5, titulo: 'VPN no conecta', nombre: 'Carlos Ramírez López', area: 'Sistemas', sistema: 'VPN Corporativo', prioridad: 'alta', estado: 'pendiente confirmación', fecha: '2026-07-07', hora: '02:20 PM', chat: [
+                { de: 'admin', texto: '¿Qué cliente VPN usas?', fecha: '2026-07-07 03:00 PM' },
+                { de: 'yo', texto: 'Cisco AnyConnect.', fecha: '2026-07-07 03:15 PM' },
+                { de: 'admin', texto: 'Ya configuramos la VPN. Confirma si funciona.', fecha: '2026-07-07 04:00 PM' }
+            ]}
+        ];
+
+        function badgeClass(estado) {
+            const map = { 'abierto': 'badge-red', 'en proceso': 'badge-yellow', 'espera información': 'badge-orange', 'pendiente confirmación': 'badge-blue', 'resuelto': 'badge-green', 'cerrado': 'badge-gray' };
+            return map[estado] || 'badge-gray';
+        }
+
+        function puedeChat(estado) {
+            return estado === 'espera información' || estado === 'pendiente confirmación';
+        }
+
+        function renderReportes() {
+            const list = document.getElementById('reportList');
+            list.innerHTML = '';
+            if (reportes.length === 0) {
+                list.innerHTML = '<div class="empty-msg"><i class="fas fa-inbox"></i><p>No has reportado ninguna incidencia aún</p></div>';
+                return;
+            }
+            reportes.forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = 'report-card';
+
+                const tieneChat = r.chat && r.chat.length > 0;
+                const chatActivo = tieneChat && puedeChat(r.estado);
+                const chatCerrado = r.estado === 'cerrado' && tieneChat;
+
+                card.innerHTML = `
+                    <div class="report-head" data-index="${idx}">
+                        <div class="report-head-left">
+                            <div class="titulo">${r.titulo}</div>
+                            <div class="meta">
+                                <span>#${r.id}</span>
+                                <span>${r.sistema}</span>
+                                <span>${r.fecha} ${r.hora}</span>
+                            </div>
+                        </div>
+                        <div class="report-head-right">
+                            <span class="badge ${badgeClass(r.estado)}">${r.estado}</span>
+                            ${tieneChat ? '<i class="fas fa-comment-dots" style="color:#2a5298;"></i>' : ''}
+                            <i class="fas fa-chevron-down report-arrow"></i>
+                        </div>
+                    </div>
+                    ${tieneChat ? `
+                    <div class="report-chat">
+                        <div class="chat-header"><i class="fas fa-comments"></i> Conversación</div>
+                        <div class="chat-body">
+                            ${r.chat.map(m => `
+                                <div class="chat-msg ${m.de === 'admin' ? 'admin' : 'yo'}">
+                                    ${m.texto}
+                                    <div class="time">${m.fecha}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${chatActivo ? `
+                        <div class="chat-input-area">
+                            <textarea id="chatInput-${r.id}" rows="1" placeholder="Escribe tu respuesta..."></textarea>
+                            <button class="chat-send" onclick="enviarChat(${r.id})"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                        ` : chatCerrado ? `
+                        <div class="chat-input-area disabled">
+                            <p><i class="fas fa-lock"></i> Chat cerrado — este reporte está cerrado</p>
+                        </div>
+                        ` : `
+                        <div class="chat-input-area disabled">
+                            <p>Esperando mensaje del administrador...</p>
+                        </div>
+                        `}
+                    </div>
+                    ` : ''}
+                `;
+                list.appendChild(card);
+            });
+
+            document.querySelectorAll('.report-head').forEach(el => {
+                el.addEventListener('click', () => {
+                    const chat = el.parentElement.querySelector('.report-chat');
+                    const arrow = el.querySelector('.report-arrow');
+                    if (chat) {
+                        chat.classList.toggle('open');
+                        arrow.classList.toggle('open');
+                    }
+                });
+            });
+        }
+
+        function enviarChat(id) {
+            const input = document.getElementById('chatInput-' + id);
+            const texto = input.value.trim();
+            if (!texto) return;
+            const r = reportes.find(x => x.id === id);
+            if (!r) return;
+            r.chat.push({ de: 'yo', texto, fecha: new Date().toLocaleString('es-MX') });
+            input.value = '';
+            renderReportes();
+            showToast('Respuesta enviada');
+        }
+
+        document.getElementById('btnNuevo').addEventListener('click', () => {
+            const formCard = document.getElementById('formCard');
+            const reportList = document.getElementById('reportList');
+            const btn = document.getElementById('btnNuevo');
+            const isOpen = formCard.classList.contains('open');
+            if (!isOpen) {
+                formCard.classList.add('open');
+                reportList.style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-times"></i> Cancelar';
+            } else {
+                formCard.classList.remove('open');
+                reportList.style.display = '';
+                btn.innerHTML = '<i class="fas fa-plus"></i> Nuevo reporte';
+            }
+        });
+
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value.trim();
+            const area = document.getElementById('area').value.trim();
+            const titulo = document.getElementById('titulo').value.trim();
+            const sistema = document.getElementById('sistema').value.trim();
+            const descripcion = document.getElementById('descripcion').value.trim();
+            const procesos = document.getElementById('procesos').value.trim();
+            if (!nombre || !area || !titulo || !sistema || !descripcion || !procesos) {
+                showToast('Completa todos los campos obligatorios', true); return;
+            }
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            await new Promise(r => setTimeout(r, 1000));
+            reportes.unshift({
+                id: nextId++, titulo, nombre, area, sistema,
+                prioridad: 'media', estado: 'abierto',
+                fecha: new Date().toLocaleDateString('es-MX'),
+                hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+                chat: []
+            });
+            document.getElementById('reportForm').reset();
+            files = []; renderFiles();
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar reporte';
+            document.getElementById('formCard').classList.remove('open');
+            document.getElementById('reportList').style.display = '';
+            document.getElementById('btnNuevo').innerHTML = '<i class="fas fa-plus"></i> Nuevo reporte';
+            renderReportes();
+            showToast('Reporte enviado correctamente');
+        });
+
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        let files = [];
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            Array.from(e.target.files).slice(0, 5 - files.length).forEach(f => files.push(f));
+            renderFiles(); fileInput.value = '';
+        });
+        function renderFiles() {
+            fileList.innerHTML = '';
+            files.forEach((f, i) => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `<i class="fas fa-file"></i> ${f.name} <span class="remove" data-index="${i}">&times;</span>`;
+                fileList.appendChild(div);
+            });
+            document.querySelectorAll('.remove').forEach(el => {
+                el.addEventListener('click', () => { files.splice(parseInt(el.dataset.index), 1); renderFiles(); });
+            });
+        }
+
+        function showToast(msg, isError) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            t.className = 'toast' + (isError ? ' error' : '');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        renderReportes();
+    </script>
+</body>
+</html>
