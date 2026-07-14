@@ -1,38 +1,3 @@
-let incidencias = [
-    { id: 1, titulo: 'Caída de red en oficina central', nombre: 'Juan Pérez López', area: 'Sistemas', sistema: 'Red corporativa', prioridad: 'alta', estado: 'abierto', usuario: 'Juan P.', fecha: '2025-04-01', descripcion: 'Se reporta caída total de la red en el piso 3. No hay acceso a internet ni a recursos internos.', procesos: 'Se reinició el switch principal y se verificaron cables de fibra óptica.', evidencia: ['captura_ping.png'], conversacion: [
-        { de: 'admin', texto: 'Estamos revisando el switch.', fecha: '2025-04-01 11:20' }
-    ]},
-    { id: 2, titulo: 'Problema con impresora láser', nombre: 'María López García', area: 'Administración', sistema: 'Impresora HP LaserJet', prioridad: 'media', estado: 'en proceso', usuario: 'María L.', fecha: '2025-04-02', descripcion: 'La impresora no imprime y muestra error de atascamiento, pero no hay papel atascado.', procesos: 'Se limpiaron los rodillos y se actualizó el firmware.', evidencia: [], conversacion: [
-        { de: 'admin', texto: 'Revisaré la impresora esta tarde.', fecha: '2025-04-02 10:45' }
-    ]},
-    { id: 3, titulo: 'Error al actualizar software contable', nombre: 'Pedro Gómez Ruiz', area: 'Contabilidad', sistema: 'SAP ERP', prioridad: 'alta', estado: 'espera información', usuario: 'Pedro G.', fecha: '2025-04-03', descripcion: 'Al intentar actualizar el módulo de facturación, el sistema arroja error SQL y no permite continuar.', procesos: 'Se revisaron los logs y se contactó al proveedor.', evidencia: ['error_sql.log'], conversacion: [
-        { de: 'admin', texto: 'Necesitamos los logs completos del error.', fecha: '2025-04-03 09:45' }
-    ]},
-    { id: 4, titulo: 'Monitor no enciende', nombre: 'Laura Sánchez Díaz', area: 'Ventas', sistema: 'Monitor Dell 27"', prioridad: 'baja', estado: 'resuelto', usuario: 'Laura S.', fecha: '2025-04-04', descripcion: 'El monitor de la estación de trabajo no enciende, ya se probó con otro cable de alimentación.', procesos: 'Se reemplazó el cable de poder y se probó con otro monitor.', evidencia: ['monitor_reemplazo.jpg'], conversacion: [
-        { de: 'admin', texto: 'Se reemplazó el monitor defectuoso.', fecha: '2025-04-04 15:30' }
-    ]},
-    { id: 5, titulo: 'Fallo en servidor de correo', nombre: 'Roberto Díaz Martínez', area: 'Sistemas', sistema: 'Microsoft Exchange', prioridad: 'alta', estado: 'pendiente confirmación', usuario: 'Roberto D.', fecha: '2025-04-05', descripcion: 'El servidor de correo no responde, los usuarios no pueden enviar ni recibir correos.', procesos: 'Se reinició el servicio y se revisaron los registros DNS.', evidencia: ['dns_logs.txt'], conversacion: [
-        { de: 'admin', texto: 'El servicio ya responde, por favor confirma que todo funcione.', fecha: '2025-04-05 09:00' }
-    ]},
-    { id: 6, titulo: 'Problema de permisos en carpeta compartida', nombre: 'Carmen Ruiz Torres', area: 'Recursos Humanos', sistema: 'Servidor de archivos', prioridad: 'media', estado: 'cerrado', usuario: 'Carmen R.', fecha: '2025-04-06', descripcion: 'Varios usuarios no pueden acceder a la carpeta compartida "Proyectos". Se requiere revisar permisos.', procesos: 'Se ajustaron los permisos en el servidor de archivos.', evidencia: [], conversacion: [
-        { de: 'admin', texto: 'Permisos corregidos, cerrando incidencia.', fecha: '2025-04-06 11:35' }
-    ]},
-    { id: 7, titulo: 'Lentitud en acceso a base de datos', nombre: 'José Martínez López', area: 'Sistemas', sistema: 'Oracle DB', prioridad: 'alta', estado: 'abierto', usuario: 'José M.', fecha: '2025-04-07', descripcion: 'Las consultas a la base de datos de producción están tomando más de 5 segundos, afectando la aplicación.', procesos: 'Se revisaron los índices y se analizó el tráfico de red.', evidencia: ['query_plan.txt'], conversacion: []},
-    { id: 8, titulo: 'Teclado inalámbrico sin respuesta', nombre: 'Elena Castro Fernández', area: 'Diseño', sistema: 'Teclado Logitech', prioridad: 'baja', estado: 'resuelto', usuario: 'Elena C.', fecha: '2025-04-08', descripcion: 'El teclado inalámbrico no responde, se cambiaron las pilas pero sigue sin funcionar.', procesos: 'Se reinstalaron los drivers y se probó en otro equipo.', evidencia: ['teclado_test.jpg'], conversacion: [
-        { de: 'admin', texto: 'Se reemplazó el teclado por uno nuevo.', fecha: '2025-04-08 14:25' }
-    ]},
-    { id: 9, titulo: 'Error en módulo de facturación', nombre: 'Luis Fernández García', area: 'Contabilidad', sistema: 'Sistema de facturación', prioridad: 'media', estado: 'en proceso', usuario: 'Luis F.', fecha: '2025-04-09', descripcion: 'Al generar una factura, el sistema muestra un error de validación de IVA.', procesos: 'Se revisó la lógica de cálculo y se contactó al desarrollador.', evidencia: ['factura_error.png'], conversacion: [
-        { de: 'admin', texto: 'Estoy revisando el código del cálculo de IVA.', fecha: '2025-04-09 12:30' }
-    ]},
-    { id: 10, titulo: 'Problema de conectividad VPN', nombre: 'Andrea Torres Ruiz', area: 'Ventas', sistema: 'VPN Corporativo', prioridad: 'alta', estado: 'espera información', usuario: 'Andrea T.', fecha: '2025-04-10', descripcion: 'Los usuarios remotos no pueden establecer conexión VPN, el cliente muestra error de autenticación.', procesos: 'Se verificaron las credenciales y se revisó el servidor VPN.', evidencia: ['vpn_logs.txt'], conversacion: [
-        { de: 'admin', texto: 'Necesito los logs del cliente VPN para revisar.', fecha: '2025-04-10 09:35' }
-    ]},
-    { id: 11, titulo: 'Fallo en disco duro externo', nombre: 'Miguel Ángel Pérez', area: 'Sistemas', sistema: 'Disco WD 2TB', prioridad: 'media', estado: 'cerrado', usuario: 'Miguel Á.', fecha: '2025-04-11', descripcion: 'El disco duro externo no es reconocido por el sistema operativo.', procesos: 'Se probó en otro puerto USB y se ejecutó chkdsk.', evidencia: ['disco_fallo.jpg'], conversacion: [
-        { de: 'admin', texto: 'El disco está dañado, se reemplazará por uno nuevo.', fecha: '2025-04-11 16:05' }
-    ]},
-    { id: 12, titulo: 'Actualización de sistema operativo fallida', nombre: 'Sofía Ramírez López', area: 'Mercadotecnia', sistema: 'Windows 11', prioridad: 'alta', estado: 'abierto', usuario: 'Sofía R.', fecha: '2025-04-12', descripcion: 'La actualización de Windows se detuvo al 75% y ahora el equipo no inicia correctamente.', procesos: 'Se intentó restaurar desde punto de recuperación del sistema.', evidencia: ['update_error.png'], conversacion: []}
-];
-
 let currentIncidenteId = null;
 let chartTipo, chartEstado, chartPrioridad, chartTendencia;
 

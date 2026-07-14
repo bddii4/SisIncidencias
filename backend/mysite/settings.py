@@ -119,3 +119,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR.parent / 'frontend']
 
 LOGIN_URL = '/'
+
+#ruta donde se guardan los archivos subidos por el usuario y acceder a esas imagenes
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR.parent / 'media'

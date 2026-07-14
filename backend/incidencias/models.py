@@ -1,5 +1,5 @@
 from django.db import models
-
+#clase de formulario de incidencias
 class Incidencia(models.Model):
     PRIORIDADES = [
         ('alta', 'Alta'),
