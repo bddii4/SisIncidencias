@@ -68,6 +68,16 @@
         <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Volver al sistema</a>
     </div>
 
+    <div class="modal-overlay" id="modalTicket">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalTitulo"></h3>
+            <button class="close-modal" onclick="cerrarModalTicket()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalTicketBody"></div>
+    </div>
+</div>
+
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toastMsg"></span></div>
 
     <script src="{% static 'js/reporte_incidencia.js' %}"></script>

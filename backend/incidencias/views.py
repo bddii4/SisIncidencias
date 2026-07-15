@@ -42,7 +42,7 @@ def reporte_page(request):
 @login_required
 def reporte_list(request):
     if request.method == 'GET':
-        reportes = Incidencia.objects.filter(nombre=request.user.username).order_by('-id')
+        reportes = Incidencia.objects.all().order_by('-id')
         data = []
         for r in reportes:
             data.append({
@@ -53,6 +53,9 @@ def reporte_list(request):
                 'sistema': r.sistema,
                 'prioridad': r.prioridad,
                 'estado': r.estado,
+                'descripcion': r.descripcion,
+                'procesos': r.procesos,
+                'evidencia': r.evidencia,
                 'fecha': r.fecha.strftime('%Y-%m-%d'),
                 'hora': r.hora.strftime('%I:%M %p') if r.hora else '',
                 'chat': r.conversacion,
@@ -151,6 +154,15 @@ def actualizar_incidencia(request, id):
         reporte.tipo = data.get('tipo', reporte.tipo)
         reporte.save(update_fields=['estado', 'tipo'])
         return JsonResponse({'message': 'Incidencia actualizada.'}, status=200)
+
+    elif request.method == 'DELETE':
+        try:
+            reporte = Incidencia.objects.get(id=id)
+        except Incidencia.DoesNotExist:
+            return JsonResponse({'message': 'Incidencia no encontrada.'}, status=404)
+        reporte.delete()
+        return JsonResponse({'message': 'Incidencia eliminada.'}, status=200)
+
     return JsonResponse({'message': 'Método no permitido.'}, status=405)
 
 @csrf_exempt

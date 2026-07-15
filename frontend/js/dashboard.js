@@ -1,3 +1,4 @@
+let incidencias = [];
 let currentIncidenteId = null;
 let chartTipo, chartEstado, chartPrioridad, chartTendencia;
 
@@ -106,7 +107,7 @@ function renderIncidencias() {
 
     const tbody = document.getElementById('tablaIncidencias');
     if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-secondary);">
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-secondary);">
             <i class="fas fa-inbox" style="font-size:24px; display:block; margin-bottom:8px;"></i>
             No se encontraron incidencias con los filtros aplicados.
         </td></tr>`;
@@ -116,6 +117,7 @@ function renderIncidencias() {
                 <td><strong>#${i.id}</strong></td>
                 <td>${i.titulo}</td>
                 <td>${i.sistema}</td>
+                <td>${capitalize(i.tipo) || '—'}</td>
                 <td><span class="badge ${getBadgeClass('prioridad', i.prioridad)}">${capitalize(i.prioridad)}</span></td>
                 <td><span class="badge ${getBadgeClass('estado', i.estado)}">${capitalize(i.estado)}</span></td>
                 <td>${i.usuario}</td>
@@ -133,7 +135,7 @@ function renderCerrados() {
     const cerrados = incidencias.filter(i => i.estado === 'cerrado');
     const tbody = document.getElementById('tablaCerrados');
     if (cerrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-secondary);">No hay incidencias cerradas.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-secondary);">No hay incidencias cerradas.</td></tr>`;
         return;
     }
     tbody.innerHTML = cerrados.map(i => `
@@ -141,6 +143,7 @@ function renderCerrados() {
             <td><strong>#${i.id}</strong></td>
             <td>${i.titulo}</td>
             <td>${i.sistema}</td>
+            <td>${capitalize(i.tipo) || '—'}</td>
             <td><span class="badge ${getBadgeClass('prioridad', i.prioridad)}">${capitalize(i.prioridad)}</span></td>
             <td>${i.usuario}</td>
             <td>${formatDate(i.fecha)}</td>
@@ -318,20 +321,33 @@ function abrirModal(id) {
     document.getElementById('modalGestion').classList.add('active');
 }
 
-function enviarMensajeAdmin() {
+async function enviarMensajeAdmin() {
     if (!currentIncidenteId) return;
-    const inc = incidencias.find(i => i.id === currentIncidenteId);
-    if (!inc) return;
     const input = document.getElementById('modalChatInput');
     const texto = input.value.trim();
     if (!texto) return;
-    if (!inc.conversacion) inc.conversacion = [];
-    inc.conversacion.push({ de: 'admin', texto, fecha: new Date().toLocaleString('es-MX') });
-    input.value = '';
-    const id = currentIncidenteId;
-    currentIncidenteId = null;
-    abrirModal(id);
-    showToast('Mensaje enviado', 'success');
+
+    try {
+        const res = await fetch(`/api/incidencias/${currentIncidenteId}/mensaje/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto, fecha: new Date().toLocaleString('es-MX') })
+        });
+
+        if (res.ok) {
+            input.value = '';
+            showToast('Mensaje enviado correctamente.', 'success');
+            cargarIncidencias();
+            const id = currentIncidenteId;
+            currentIncidenteId = null;
+            abrirModal(id);
+        } else {
+            showToast('Error al enviar el mensaje.', 'error');
+        }
+    } catch (error) {
+        showToast('Error al enviar el mensaje.', 'error');
+    }
+        
 }
 
 function cerrarModal() {
@@ -339,24 +355,29 @@ function cerrarModal() {
     currentIncidenteId = null;
 }
 
-function guardarEstado() {
+async function guardarEstado() {
     if (!currentIncidenteId) return;
-    const inc = incidencias.find(i => i.id === currentIncidenteId);
-    if (!inc) return;
     const nuevoEstado = document.getElementById('modalEstado').value;
     const nuevoTipo = document.getElementById('modalTipo').value;
-
-    inc.estado = nuevoEstado;
-    if (nuevoTipo) inc.tipo = nuevoTipo;
-
-    showToast('Incidencia actualizada correctamente', 'success');
-    cerrarModal();
-    renderKPI();
-    renderRecent();
-    renderIncidencias();
-    renderCerrados();
-    actualizarGraficos();
+   
+    try {
+        const res = await fetch(`/api/incidencias/${currentIncidenteId}/`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: nuevoEstado, tipo: nuevoTipo })
+        });
+        if (res.ok) {
+             showToast('Incidencia actualizada correctamente.', 'success');
+             cerrarModal();
+             cargarIncidencias();
+        } else {
+            showToast('Error al actualizar la incidencia.', 'error');
+        }
+    } catch (error) {
+        showToast('Error al actualizar la incidencia.', 'error');
+    }
 }
+
 
 function actualizarGraficos() {
     const tipos = ['red', 'hardware', 'software', 'otros'];
@@ -375,15 +396,34 @@ function actualizarGraficos() {
     renderStatsSummary();
 }
 
-function eliminarIncidencia(id) {
+async function eliminarIncidencia(id) {
     if (!confirm('¿Estás seguro de eliminar esta incidencia? Esta acción no se puede deshacer.')) return;
-    incidencias = incidencias.filter(i => i.id !== id);
-    showToast('Incidencia eliminada correctamente.', 'error');
+    try {
+        const res = await fetch(`/api/incidencias/${id}/`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Incidencia eliminada correctamente.', 'error');
+            cargarIncidencias();
+        } else {
+            showToast('Error al eliminar.', 'error');
+        }
+    } catch (err) {
+        showToast('Error de conexión.', 'error');
+    }
+}
+
+async function cargarIncidencias() {
+    try {
+        const res = await fetch('/api/incidencias/');
+        if (res.ok) incidencias = await res.json();
+    } catch (error) {
+        showToast('Error al cargar incidencias', 'error');
+    }
     renderKPI();
     renderRecent();
     renderIncidencias();
     renderCerrados();
-    actualizarGraficos();
+    initCharts();
+    renderStatsSummary();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -432,10 +472,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    renderKPI();
-    renderRecent();
-    renderIncidencias();
-    renderCerrados();
-    initCharts();
-    renderStatsSummary();
+    cargarIncidencias();
 });

@@ -25,7 +25,7 @@ function renderReportes() {
         const chatCerrado = r.estado === 'cerrado' && tieneChat;
 
         card.innerHTML = `
-            <div class="report-head" data-index="${idx}">
+            <div class="report-head" data-id="${r.id}">
                 <div class="report-head-left">
                     <div class="titulo">${r.titulo}</div>
                     <div class="meta">
@@ -40,45 +40,57 @@ function renderReportes() {
                     <i class="fas fa-chevron-down report-arrow"></i>
                 </div>
             </div>
-            ${tieneChat ? `
-            <div class="report-chat">
-                <div class="chat-header"><i class="fas fa-comments"></i> Conversación</div>
-                <div class="chat-body">
-                    ${r.chat.map(m => `
-                        <div class="chat-msg ${m.de === 'admin' ? 'admin' : 'yo'}">
-                            ${m.texto}
-                            <div class="time">${m.fecha}</div>
-                        </div>
-                    `).join('')}
+            <div class="report-detail">
+                <div class="detail-section">
+                    <div class="detail-label"><i class="fas fa-align-left"></i> Descripción</div>
+                    <div class="detail-text">${r.descripcion || 'Sin descripción'}</div>
                 </div>
-                ${chatActivo ? `
-                <div class="chat-input-area">
-                    <textarea id="chatInput-${r.id}" rows="1" placeholder="Escribe tu respuesta..."></textarea>
-                    <button class="chat-send" onclick="enviarChat(${r.id})"><i class="fas fa-paper-plane"></i></button>
+                <div class="detail-section">
+                    <div class="detail-label"><i class="fas fa-history"></i> Procesos realizados</div>
+                    <div class="detail-text">${r.procesos || 'Sin procesos registrados'}</div>
                 </div>
-                ` : chatCerrado ? `
-                <div class="chat-input-area disabled">
-                    <p><i class="fas fa-lock"></i> Chat cerrado — este reporte está cerrado</p>
+                ${r.evidencia && r.evidencia.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-label"><i class="fas fa-paperclip"></i> Evidencia</div>
+                    <div class="detail-text">${r.evidencia.map(e => `<i class="fas fa-file"></i> ${e}`).join('<br>')}</div>
                 </div>
-                ` : `
-                <div class="chat-input-area disabled">
-                    <p>Esperando mensaje del administrador...</p>
+                ` : ''}
+                ${tieneChat ? `
+                <div class="report-chat">
+                    <div class="chat-header"><i class="fas fa-comments"></i> Conversación</div>
+                    <div class="chat-body">
+                        ${r.chat.map(m => `
+                            <div class="chat-msg ${m.de === 'admin' ? 'admin' : 'yo'}">
+                                ${m.texto}
+                                <div class="time">${m.fecha}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${chatActivo ? `
+                    <div class="chat-input-area">
+                        <textarea id="chatInput-${r.id}" rows="1" placeholder="Escribe tu respuesta..."></textarea>
+                        <button class="chat-send" onclick="enviarChat(${r.id})"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                    ` : chatCerrado ? `
+                    <div class="chat-input-area disabled">
+                        <p><i class="fas fa-lock"></i> Chat cerrado — este reporte está cerrado</p>
+                    </div>
+                    ` : `
+                    <div class="chat-input-area disabled">
+                        <p>Esperando mensaje del administrador...</p>
+                    </div>
+                    `}
                 </div>
-                `}
+                ` : ''}
             </div>
-            ` : ''}
         `;
         list.appendChild(card);
     });
 
     document.querySelectorAll('.report-head').forEach(el => {
         el.addEventListener('click', () => {
-            const chat = el.parentElement.querySelector('.report-chat');
-            const arrow = el.querySelector('.report-arrow');
-            if (chat) {
-                chat.classList.toggle('open');
-                arrow.classList.toggle('open');
-            }
+            const id = parseInt(el.dataset.id);
+            abrirTicket(id);
         });
     });
 }
@@ -106,6 +118,61 @@ function enviarChat(id) {
     renderReportes();
     showToast('Respuesta enviada');
 }
+
+function abrirTicket(id) {
+    const r = reportes.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('modalTitulo').textContent = r.titulo;
+    document.getElementById('modalTicketBody').innerHTML = `
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:12px;">
+            <div><strong>Nombre:</strong> ${r.nombre}</div>
+            <div><strong>Área:</strong> ${r.area}</div>
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:12px;">
+            <div><strong>Sistema:</strong> ${r.sistema}</div>
+            <div><strong>Prioridad:</strong> <span class="badge ${badgeClass(r.estado)}">${r.prioridad}</span></div>
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:12px;">
+            <div><strong>Fecha:</strong> ${r.fecha}</div>
+            <div><strong>Hora:</strong> ${r.hora}</div>
+        </div>
+        <div class="modal-section-ticket">
+            <div class="modal-label"><i class="fas fa-align-left"></i> Descripción</div>
+            <div class="modal-text">${r.descripcion || 'Sin descripción'}</div>
+        </div>
+        <div class="modal-section-ticket">
+            <div class="modal-label"><i class="fas fa-history"></i> Procesos realizados</div>
+            <div class="modal-text">${r.procesos || 'Sin procesos registrados'}</div>
+        </div>
+        ${r.evidencia && r.evidencia.length > 0 ? `
+        <div class="modal-section-ticket">
+            <div class="modal-label"><i class="fas fa-paperclip"></i> Evidencia</div>
+            <div class="modal-text">${r.evidencia.map(e => `<i class="fas fa-file"></i> ${e}`).join('<br>')}</div>
+        </div>
+        ` : ''}
+        ${r.chat && r.chat.length > 0 ? `
+        <div class="modal-section-ticket">
+            <div class="modal-label"><i class="fas fa-comments"></i> Conversación</div>
+            <div class="modal-chat">
+                ${r.chat.map(m => `
+                    <div class="chat-msg ${m.de === 'admin' ? 'admin' : 'yo'}">
+                        ${m.texto}
+                        <div class="time">${m.fecha}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+    `;
+    document.getElementById('modalTicket').classList.add('active');
+}
+
+function cerrarModalTicket() {
+    document.getElementById('modalTicket').classList.remove('active');
+}
+document.getElementById('modalTicket').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalTicket();
+});
 
 document.getElementById('btnNuevo').addEventListener('click', () => {
     const formCard = document.getElementById('formCard');
@@ -207,5 +274,7 @@ function showToast(msg, isError) {
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3500);
 }
+
+
 
 cargarReportes();
